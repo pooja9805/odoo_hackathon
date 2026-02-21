@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+  role     String
+}
+
+model Vehicle {
+  id           Int    @id @default(autoincrement())
+  model        String
+  type         String
+  licensePlate String @unique
+  capacity     Int
+  odometer     Int
+  status       String @default("Available")
+
+  trips        Trip[]
+  maintenance  MaintenanceLog[]
+  fuels        FuelLog[]
+}
+
+model Driver {
+  id             Int      @id @default(autoincrement())
+  name           String
+  licenseNumber String
+  licenseExpiry DateTime
+  completionRate Float   @default(0)
+  safetyScore    Float   @default(0)
+  complaints     Int     @default(0)
+  status         String  @default("OnDuty")
+
+  trips Trip[]
+}
+
+model Trip {
+  id            Int      @id @default(autoincrement())
+  cargo         Int
+  origin        String
+  destination   String
+  distance      Int
+  estimatedFuel Int
+  status        String   @default("Draft")
+  revenue       Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  vehicleId Int
+  driverId  Int
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  driver  Driver  @relation(fields: [driverId], references: [id])
+}
+
+model MaintenanceLog {
+  id        Int      @id @default(autoincrement())
+  details   String
+  cost      Int
+  date      DateTime @default(now())
+
+  vehicleId Int
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+}
+
+model FuelLog {
+  id        Int      @id @default(autoincrement())
+  liters    Int
+  cost      Int
+  date      DateTime @default(now())
+
+  vehicleId Int
+  tripId    Int?
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+}
